@@ -11,10 +11,10 @@ This project is designed to combat the issue of counterfeit medicines by providi
 3. [Technology Stack](#technology-stack)
 4. [Installation](#installation)
 5. [How It Works](#how-it-works)
-6. [Project Structure](#project-structure)
-7. [Endpoints](#endpoints)
-8. [Contributing](#contributing)
-9. [License](#license)
+6. [Endpoints](#endpoints)
+
+
+
 
 ---
 
@@ -91,6 +91,15 @@ The system extracts the mf_id, prod_id, and digital signature from the QR code.
 The system queries the database for the associated public key and medicine data.
 The digital signature is verified using the manufacturer’s public key.
 If the signature is valid, the original medicine data is shown to the user; otherwise, an alert is raised for potential tampering.
+
+## Endpoints
+
+- `GET /generate_mf_id`: Generates a unique manufacturer ID (`mf_id`).
+- `GET /generate_prod_id`: Generates a unique product ID (`prod_id`).
+- `POST /verify_qr`: Verifies the QR code. The request should include QR code data in json.
+- `POST /gen_qr`: Generates a QR code and returns the QR code data link. The request should include the medicine data in json.
+(note: incoming_data.json file contains the format of the JSON data expected from the manufacturer when generating a QR code for a medicine product)
+
 
 
 
