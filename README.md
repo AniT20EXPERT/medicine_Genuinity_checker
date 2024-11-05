@@ -3,6 +3,8 @@
 This project is designed to combat the issue of counterfeit medicines by providing a system that generates QR codes containing digital signatures, which can be verified to ensure the authenticity of medicine products. The project involves both manufacturers and consumers, with medicine data encrypted, signed, and stored securely. Consumers can scan QR codes to verify the authenticity of the medicine they purchase.
 
 ---
+## System design
+![System Design Diagram](./systemdesign.png "System Design Overview")
 
 ## Table of Contents
 
