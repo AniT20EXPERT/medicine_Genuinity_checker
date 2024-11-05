@@ -74,6 +74,25 @@ The system is composed of several key parts:
    npm run start:manufacturer
    npm run start:patient
 5. **Run the application:**
-    You can now start the servers.   
+    You can now start the server.
+
+## How It Works
+### Manufacturer Process:
+
+The manufacturer signs up and creates medicine data.
+A unique mf_id (manufacturer ID) and prod_id (product ID) are generated.
+The manufacturer’s private key is encrypted with AES-256-CBC and stored securely.
+A QR code is generated with the mf_id, prod_id, and a digital signature of the data.
+The QR code is printed on the medicine packaging.
+### Patient Verification Process:
+
+The patient scans the QR code using the patient UI.
+The system extracts the mf_id, prod_id, and digital signature from the QR code.
+The system queries the database for the associated public key and medicine data.
+The digital signature is verified using the manufacturer’s public key.
+If the signature is valid, the original medicine data is shown to the user; otherwise, an alert is raised for potential tampering.
+
+
+
 
 
