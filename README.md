@@ -65,12 +65,12 @@ The system is composed of several key parts:
    npm install
 3. **Set up environment variables:**
     Create a .env file in the root directory and define your environment variables:   
-```bash
+   ```bash
    MASTER_KEY=<your_master_key>
    DB_URI=<your_mongodb_uri>
 4. **Run the application:**
     Start both the manufacturer and patient UI servers.   
-```bash
+   ```bash
    npm run start:manufacturer
    npm run start:patient
 5. **Run the application:**
