@@ -49,6 +49,7 @@
 
 4) the response for the above POST is the link for qrcode
 
-
+for server1: npm run dev2
+for frontend: npm run dev
 
   
