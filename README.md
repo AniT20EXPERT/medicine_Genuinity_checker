@@ -1,5 +1,6 @@
 # Medicine Authentication System
-
+![UI - Manufacturer](./UI_Manufacturer.png "Manufacturer View")
+![UI - Consumer](./UI_Consumer.png "Consumer View")
 A minimal, end-to-end demo showcasing QR-based product genuineness verification for medicines. Manufacturers generate signed QR codes for products; consumers scan to verify authenticity. This demo focuses on the workflow and does not include per-manufacturer authentication yet.
 
 - Frontend entry: `frontend/src/App.jsx`
