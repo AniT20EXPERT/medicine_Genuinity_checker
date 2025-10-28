@@ -1,0 +1,140 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36" version="28.2.7">
+  <diagram name="Page-1" id="zw3Z3AiYXIF59BzGz7CK">
+    <mxGraphModel dx="3503" dy="2223" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2200" pageHeight="1400" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="Medicine Authentication System — QR-based Genuineness Verification (Demo)" style="text;html=1;align=center;verticalAlign=top;fontSize=20;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="-320" y="20" width="2100" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="frontend" value="Frontend (React)&#xa;Entry: frontend/src/App.jsx&#xa;Run: npm run dev" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#64b5f6" parent="1" vertex="1">
+          <mxGeometry x="210" y="110" width="280" height="270" as="geometry" />
+        </mxCell>
+        <mxCell id="manuUI" value="Manufacturer UI&#xa;- Generate medicine data&#xa;- GET /generate_mf_id&#xa;- GET /generate_prod_id&#xa;- POST /gen_qr" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64b5f6" parent="frontend" vertex="1">
+          <mxGeometry x="71.51407407407406" y="10.384615384615385" width="136.98222222222222" height="94.37538461538462" as="geometry" />
+        </mxCell>
+        <mxCell id="patientUI" value="Patient UI&#xa;- Scan QR&#xa;- POST /verify_qr&#xa;- Show validity / duplication flag" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64b5f6" parent="frontend" vertex="1">
+          <mxGeometry x="72.5925925925926" y="167.51423076923078" width="134.8148148148148" height="80.36653846153847" as="geometry" />
+        </mxCell>
+        <mxCell id="qrPkg" value="QR Code on Medicine Package&#xa;Payload: { mf_id, prod_id, sig, ... }&#xa;Compressed via zlib, encoded via qrcode" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#ffb74d" parent="1" vertex="1">
+          <mxGeometry x="590" y="380" width="230" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="backend" value="Backend (Node.js / Express)&#xa;Entry: backend/server1.js&#xa;Run: npm run dev2" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#81c784" parent="1" vertex="1">
+          <mxGeometry x="970" y="130" width="500" height="370" as="geometry" />
+        </mxCell>
+        <mxCell id="srv1a" value="Server 1A — Key &amp; Data Handling&#xa;- Create key pair per manufacturer (RSA)&#xa;- Encrypt private key (AES-256-CBC, MASTER_KEY)&#xa;- Store product + signature&#xa;- Generate QR (zlib + qrcode)&#xa;Endpoints:&#xa;• GET /generate_mf_id&#xa;• GET /generate_prod_id&#xa;• POST /gen_qr" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#81c784" parent="backend" vertex="1">
+          <mxGeometry x="18.755102040816325" y="0.69257142857143" width="287.3775510204082" height="162.0917142857143" as="geometry" />
+        </mxCell>
+        <mxCell id="srv1b" value="Server 1B — Verification&#xa;- Fetch public key + product record&#xa;- Verify ECDSA signature&#xa;- Check/update scan count (one-time policy)&#xa;Endpoint:&#xa;• POST /verify_qr" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#81c784" parent="backend" vertex="1">
+          <mxGeometry x="310.74" width="176.63" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="crypto" value="Crypto Stack&#xa;- RSA (keys)&#xa;- ECDSA (signatures)&#xa;- AES-256-CBC (private key encryption)&#xa;- zlib (compression)&#xa;- qrcode (QR generation)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#ba68c8" parent="backend" vertex="1">
+          <mxGeometry x="18.76" y="220.0025" width="231.25000000000003" height="115.625" as="geometry" />
+        </mxCell>
+        <mxCell id="masterKey" value=".env / MASTER_KEY&#xa;Used for AES-256-CBC encryption of private keys" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fffde7;strokeColor=#ffd54f" parent="backend" vertex="1">
+          <mxGeometry x="319.9991304347826" y="239.99656249999998" width="147.59782608695653" height="71.76843749999999" as="geometry" />
+        </mxCell>
+        <mxCell id="decision" value="Already verified?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffebee;strokeColor=#ef5350" parent="1" vertex="1">
+          <mxGeometry x="1020" y="509.61" width="160" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="validRes" value="Valid: Show original product data" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#81c784" parent="1" vertex="1">
+          <mxGeometry x="830" y="649.61" width="260" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="dupRes" value="Flag: Possible duplication / tampering" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffebee;strokeColor=#ef5350" parent="1" vertex="1">
+          <mxGeometry x="1190" y="649.61" width="260" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="e_manu_to_srv1a" style="endArrow=block;strokeColor=#64b5f6" parent="1" source="manuUI" target="srv1a" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="980" y="190" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_manu_to_srv1a_lbl" value="GET /generate_mf_id&#xa;GET /generate_prod_id&#xa;POST /gen_qr" style="edgeLabel;html=1;align=left;verticalAlign=middle;resizable=0;points=[]" parent="e_manu_to_srv1a" vertex="1" connectable="0">
+          <mxGeometry x="0.1" y="-1" relative="1" as="geometry">
+            <mxPoint x="-245" y="-16" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_srv1a_to_qr" style="endArrow=block;strokeColor=#81c784" parent="1" source="srv1a" target="qrPkg" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_srv1a_to_qr_lbl" value="Generate QR (zlib + qrcode) with signed payload" style="edgeLabel;html=1;align=center;verticalAlign=bottom;resizable=0;points=[]" parent="e_srv1a_to_qr" vertex="1" connectable="0">
+          <mxGeometry x="0.5" y="-1" relative="1" as="geometry">
+            <mxPoint x="-13" y="15" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_qr_to_patient" style="endArrow=block;strokeColor=#ffb74d" parent="1" source="qrPkg" target="patientUI" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_qr_to_patient_lbl" value="Scan QR" style="edgeLabel;html=1;align=center;verticalAlign=top;resizable=0;points=[]" parent="e_qr_to_patient" vertex="1" connectable="0">
+          <mxGeometry x="0.5" y="1" relative="1" as="geometry">
+            <mxPoint x="54" y="1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_patient_to_srv1b" style="endArrow=block;strokeColor=#64b5f6" parent="1" source="patientUI" target="srv1b" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="920" y="320" />
+              <mxPoint x="1140" y="340" />
+              <mxPoint x="1369" y="340" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_patient_to_srv1b_lbl" value="POST /verify_qr (mf_id, prod_id, sig, ...)" style="edgeLabel;html=1;align=center;verticalAlign=bottom;resizable=0;points=[]" parent="e_patient_to_srv1b" vertex="1" connectable="0">
+          <mxGeometry x="0.5" y="-1" relative="1" as="geometry">
+            <mxPoint x="-401" y="-21" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_srv1b_to_decision" style="endArrow=block;strokeColor=#81c784" parent="1" source="srv1b" target="decision" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1500" y="210" />
+              <mxPoint x="1500" y="560" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_srv1b_to_decision_lbl" value="Check one-time verification policy" style="edgeLabel;html=1;align=center;verticalAlign=bottom;resizable=0;points=[]" parent="e_srv1b_to_decision" vertex="1" connectable="0">
+          <mxGeometry x="0.5" y="-1" relative="1" as="geometry">
+            <mxPoint y="1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_decision_to_valid" style="endArrow=block;strokeColor=#81c784" parent="1" source="decision" target="validRes" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_decision_to_valid_lbl" value="No" style="edgeLabel;html=1;align=center;verticalAlign=bottom;resizable=0;points=[]" parent="e_decision_to_valid" vertex="1" connectable="0">
+          <mxGeometry x="0.5" y="-1" relative="1" as="geometry">
+            <mxPoint y="-18" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_decision_to_dup" style="endArrow=block;strokeColor=#ef5350" parent="1" source="decision" target="dupRes" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_decision_to_dup_lbl" value="Yes" style="edgeLabel;html=1;align=center;verticalAlign=bottom;resizable=0;points=[]" parent="e_decision_to_dup" vertex="1" connectable="0">
+          <mxGeometry x="0.5" y="-1" relative="1" as="geometry">
+            <mxPoint y="-18" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="notes" value="Notes &amp; Assumptions&#xa;- Demo scope: No per-manufacturer auth (workflow only)&#xa;- Endpoints: /generate_mf_id, /generate_prod_id, /gen_qr, /verify_qr&#xa;- One-time verification: first valid scan accepted, subsequent scans flagged&#xa;- Refer: incoming_data.json for QR generation payload" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#9e9e9e" parent="1" vertex="1">
+          <mxGeometry x="210" y="500" width="480" height="220" as="geometry" />
+        </mxCell>
+        <mxCell id="db" value="MongoDB&lt;br&gt;- Manufacturers, keys&lt;br&gt;- Products, signatures&lt;br&gt;- medicine data&lt;br&gt;- number of scans" style="shape=cylinder;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;fillColor=#e0f2f1;strokeColor=#4db6ac" parent="1" vertex="1">
+          <mxGeometry x="1170" y="-20" width="170" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="e_srv1a_to_db" style="endArrow=block;strokeColor=#81c784" parent="1" source="srv1a" target="db" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_srv1a_to_db_lbl" value="Store product, keys, signatures" style="edgeLabel;html=1;align=center;verticalAlign=bottom;resizable=0;points=[]" parent="e_srv1a_to_db" vertex="1" connectable="0">
+          <mxGeometry x="0.5" y="-1" relative="1" as="geometry">
+            <mxPoint x="-21" y="20" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_srv1b_to_db" style="endArrow=block;strokeColor=#81c784" parent="1" source="srv1b" target="db" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_srv1b_to_db_lbl" value="Fetch record + public key&#xa;Update scan count" style="edgeLabel;html=1;align=center;verticalAlign=bottom;resizable=0;points=[]" parent="e_srv1b_to_db" vertex="1" connectable="0">
+          <mxGeometry x="0.5" y="-1" relative="1" as="geometry">
+            <mxPoint x="74" y="21" as="offset" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
