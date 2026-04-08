@@ -1,4 +1,4 @@
-// ctrl + s for applying changes to server when running with nodemon
+
 const express = require('express')
 const app = express()
 app.use(express.json());
@@ -29,9 +29,7 @@ app.get('/', (req, res)=> {
     res.send('Hello World from nodejs');
 });
 
-// ============================================
-// KEY GENERATION FUNCTIONS
-// ============================================
+
 
 /**
  * Generate a unique keypair for a manufacturer using ECDSA (secp256k1)
@@ -87,9 +85,6 @@ function decryptPrivateKey(encryptedPrivateKey, master_key) {
     return decrypted.toString('utf8');
 }
 
-// ============================================
-// DATABASE HELPER FUNCTIONS
-// ============================================
 
 async function checkIfMfIdExists(mf_id) {
     try {
@@ -153,9 +148,7 @@ async function getMedicineData(prod_id) {
     }
 }
 
-// ============================================
-// SIGNATURE FUNCTIONS
-// ============================================
+
 
 function signData(privateKeyPEM, data) {
     const hash = crypto.createHash('sha256').update(data).digest();
@@ -173,9 +166,6 @@ function verifySignature(signature, publicKeyPEM, data) {
     return isVerified;
 }
 
-// ============================================
-// ROUTES
-// ============================================
 
 const generateMFID = require('./mfid_gen.js');
 
@@ -194,10 +184,7 @@ app.get('/generate_mf_id', async (req, res) => {
     }
 });
 
-/**
- * Optional: Manual manufacturer registration endpoint
- * (Kept for backwards compatibility if needed)
- */
+
 app.post('/addKeyPair', async (req, res) => {
     try {
         const { mf_id } = req.body;
@@ -271,11 +258,7 @@ app.get('/generate_prod_id', async (req, res)=> {
 const QRCode = require('qrcode');
 const zlib = require('zlib');
 
-/**
- * Generate QR code for a product
- * NOW: Automatically generates unique keypair for new manufacturers
- * OR: Uses existing keypair for returning manufacturers
- */
+
 app.post('/gen_qr', async (req, res) => {
     try {
         const mf_id = req.body.mf_id.toString();
@@ -360,10 +343,7 @@ app.post('/gen_qr', async (req, res) => {
     }
 });
 
-/**
- * Verify QR code authenticity
- * Verifies signature using manufacturer's public key
- */
+
 app.post('/verify_qr', async (req, res) => {
     try {
         const datafromqr = req.body.qr_data;
@@ -442,7 +422,7 @@ app.post('/verify_qr', async (req, res) => {
     }
 });
 
-// Run server on port 3000
+
 app.listen(3000, ()=>{
     console.log("server running on port 3000"); 
 });
