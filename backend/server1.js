@@ -8,6 +8,7 @@ const medicine_data = require('./models/medicine.model.js');
 const keys_and_id = require('./models/keys_and_id.model.js');
 const mongoose = require('mongoose');
 const crypto = require('crypto');
+const axios = require("axios");
 
 //connecting db
 require('dotenv').config();
@@ -166,6 +167,18 @@ function verifySignature(signature, publicKeyPEM, data) {
     return isVerified;
 }
 
+async function logVerificationToLambda(prod_id, verified, duplicate) {
+    try {
+        await axios.post(process.env.LAMBDA_URL, {
+            prod_id,
+            verified,
+            duplicate,
+            timestamp: new Date().toISOString()
+        });
+    } catch (err) {
+        console.error("Lambda logging failed:", err.message);
+    }
+}
 
 const generateMFID = require('./mfid_gen.js');
 
@@ -345,80 +358,89 @@ app.post('/gen_qr', async (req, res) => {
 
 
 app.post('/verify_qr', async (req, res) => {
+    let prod_id = null;
+
     try {
         const datafromqr = req.body.qr_data;
         const compressedBuffer = Buffer.from(datafromqr, 'base64');
-        
-        // Decompress the data
-        zlib.inflate(compressedBuffer, async (err, buffer) => {
-            if (err) {
-                console.error("Error decompressing data:", err);
-                return res.status(400).json({ 
-                    message: 'Invalid QR code format', 
-                    isVerified: false 
-                });
-            }
-            
-            try {
-                // Parse QR data
-                const decompressedData = buffer.toString('utf8');
-                const jsonData = JSON.parse(decompressedData);
-                const { s: signature, m: mf_id, p: prod_id } = jsonData;
-                
-                // Fetch manufacturer's public key and product data
-                const currentPublicKey = await getPublicKey(mf_id);
-                const currentData = await getMedicineData(prod_id);
-                const medicineRecord = await medicine_data.findOne({ prod_id });
-                if (!medicineRecord) return res.status(404).json({ message: "Product not found" });
 
-                medicineRecord.verification_count += 1;
-                medicineRecord.last_verified_at = new Date();
-                await medicineRecord.save();
+        // Decompress QR data (await version)
+        const buffer = await inflateAsync(compressedBuffer);
 
-                if (!currentPublicKey || !currentData) {
-                    return res.status(400).json({ 
-                        message: 'Product not genuine — missing data in database', 
-                        isVerified: false 
-                    });
-                }
-                
-                // Verify signature using manufacturer's public key
-                const isVerified = verifySignature(signature, currentPublicKey, currentData);
-                
-                if (isVerified) {
-                    if (medicineRecord.verification_count > 1) {
-                    return res.status(200).json({
-                        message: "⚠️ Warning: This QR has been scanned multiple times. Possible duplicate.",
-                        isVerified: true,
-                        manufacturer_id: mf_id,
-                        product_id: prod_id,
-                        product_data: JSON.parse(currentData)
-                    });
-                    } else {
-                    return res.status(200).json({
-                        message: "✅ Product is genuine and first-time verified.",
-                        isVerified: true,
-                        manufacturer_id: mf_id,
-                        product_id: prod_id,
-                        product_data: JSON.parse(currentData)
-                    });
-                    }
-                } else {
-                    res.status(400).json({ 
-                        message: 'Product not genuine — signature verification failed', 
-                        isVerified 
-                    });
-                }
-            } catch (parseError) {
-                return res.status(400).json({ 
-                    message: 'Invalid QR data format', 
-                    isVerified: false,
-                    error: parseError.message
-                });
-            }
+        const decompressedData = buffer.toString('utf8');
+        const jsonData = JSON.parse(decompressedData);
+
+        const { s: signature, m: mf_id, p: extractedProdId } = jsonData;
+        prod_id = extractedProdId;
+
+        // Fetch data
+        const currentPublicKey = await getPublicKey(mf_id);
+        const currentData = await getMedicineData(prod_id);
+        const medicineRecord = await medicine_data.findOne({ prod_id });
+
+        if (!medicineRecord) {
+            await logVerificationToLambda(prod_id, false, false);
+            return res.status(404).json({ message: "Product not found" });
+        }
+
+        medicineRecord.verification_count += 1;
+        medicineRecord.last_verified_at = new Date();
+        await medicineRecord.save();
+
+        if (!currentPublicKey || !currentData) {
+            await logVerificationToLambda(prod_id, false, false);
+            return res.status(400).json({
+                message: 'Product not genuine — missing data in database',
+                isVerified: false
+            });
+        }
+
+        const isVerified = verifySignature(signature, currentPublicKey, currentData);
+
+        if (!isVerified) {
+            await logVerificationToLambda(prod_id, false, false);
+            return res.status(400).json({
+                message: 'Product not genuine — signature verification failed',
+                isVerified: false
+            });
+        }
+
+        // Genuine product
+        const isDuplicate = medicineRecord.verification_count > 1;
+
+        await logVerificationToLambda(prod_id, true, isDuplicate);
+
+        if (isDuplicate) {
+            return res.status(200).json({
+                message: "⚠️ Warning: This QR has been scanned multiple times.",
+                isVerified: true,
+                duplicate: true,
+                manufacturer_id: mf_id,
+                product_id: prod_id,
+                product_data: JSON.parse(currentData)
+            });
+        }
+
+        return res.status(200).json({
+            message: "✅ Product is genuine and first-time verified.",
+            isVerified: true,
+            duplicate: false,
+            manufacturer_id: mf_id,
+            product_id: prod_id,
+            product_data: JSON.parse(currentData)
         });
+
     } catch (error) {
-        res.status(500).json({ message: error.message });
+
+        if (prod_id) {
+            await logVerificationToLambda(prod_id, false, false);
+        }
+
+        return res.status(400).json({
+            message: 'Invalid QR data format',
+            isVerified: false,
+            error: error.message
+        });
     }
 });
 
