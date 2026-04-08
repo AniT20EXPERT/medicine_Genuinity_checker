@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import QrReader from "react-qr-reader-es6";
 import { Captions } from "lucide-react";
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
 // -------------------------------------------
 // Manufacturer Dashboard
@@ -49,8 +50,8 @@ function ManufacturerDashboard() {
       setMessage("Generating unique IDs...");
 
       const [mfRes, prodRes] = await Promise.all([
-        axios.get("http://localhost:3000/generate_mf_id"),
-        axios.get("http://localhost:3000/generate_prod_id"),
+        axios.get(`${API_BASE_URL}/generate_mf_id`),
+        axios.get(`${API_BASE_URL}/generate_prod_id`),
       ]);
 
       setFormData((prev) => ({
@@ -149,7 +150,7 @@ function ManufacturerDashboard() {
         medicine_data: formData.medicine_data,
       };
 
-      const res = await axios.post("http://localhost:3000/gen_qr", payload);
+      const res = await axios.post(`${API_BASE_URL}/gen_qr`, payload);
 
       if (res.data.qrCodeUrl) {
         setQrUrl(res.data.qrCodeUrl);
@@ -528,47 +529,52 @@ function CustomerVerifier() {
     return () => (console.error = originalError);
   }, []);
 
+  const scanLock = useRef(false);
   const handleScan = async (data) => {
+    if (!data || scanLock.current) return;
+
+    scanLock.current = true;
+
     try {
-      if (!data || verifying) return;
 
       let scannedText;
+
       if (typeof data === "string") scannedText = data;
       else if (data?.text) scannedText = data.text;
       else if (data?.data) scannedText = data.data;
-      else return;
+      else {
+        scanLock.current = false;
+        return;
+      }
 
-      if (
-        !scannedText ||
-        scannedText.trim() === "" ||
-        scannedText === scannedData
-      ) return;
-
-      setScannedData(scannedText);
-      setVerifying(true);
       setResult("Verifying product authenticity...");
 
-      try {
-        console.log("Scanned Text:", scannedText);
-        console.log("type of scannedText:", typeof(scannedText));
-        const res = await axios.post("http://localhost:3000/verify_qr", {
-          qr_data: scannedText,
-        });
-        if (res.data.isVerified)
-          setResult("Verified: " + (res.data.message || "Authentic Medicine Verified"));
-        else setResult("Failed: " + (res.data.message || "Product verification failed"));
-      } catch (err) {
-        console.error("Verification error:", err);
-        setResult(
-          "Failed: " +
-            (err.response?.data?.message ||
-              "Product not genuine or verification failed")
-        );
-      } finally {
-        setVerifying(false);
+      const res = await axios.post(`${API_BASE_URL}/verify_qr`, {
+        qr_data: scannedText,
+      });
+
+      if (res.data.isVerified) {
+        setResult("✅ " + res.data.message);
+      } else {
+        setResult("❌ " + res.data.message);
       }
+
     } catch (err) {
-      console.warn("Scan handling error:", err);
+
+      console.error("Verification error:", err);
+
+      setResult(
+        "❌ " +
+          (err.response?.data?.message ||
+            "Product verification failed")
+      );
+
+    } finally {
+
+      setTimeout(() => {
+        scanLock.current = false;
+      }, 3000);
+
     }
   };
 
