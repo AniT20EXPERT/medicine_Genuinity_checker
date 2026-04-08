@@ -361,12 +361,30 @@ app.post('/verify_qr', async (req, res) => {
     let prod_id = null;
 
     try {
-        const datafromqr = req.body.qr_data;
-        const compressedBuffer = Buffer.from(datafromqr, 'base64');
+        let datafromqr = req.body.qr_data;
+        if (typeof datafromqr !== "string") {
+            datafromqr = datafromqr?.text || datafromqr?.data || "";
+        }
+
+        datafromqr = datafromqr.trim();
+
+        let compressedBuffer;
+
+        try {
+            compressedBuffer = Buffer.from(datafromqr, "base64");
+        } catch (err) {
+            throw new Error("QR base64 decoding failed");
+        }
 
         // Decompress QR data (await version)
-        const buffer = await inflateAsync(compressedBuffer);
+        const util = require("util");
+        const zlib = require("zlib");
 
+        const inflateAsync = util.promisify(zlib.inflate);
+
+        const buffer = await inflateAsync(compressedBuffer);
+        console.log("Raw QR Data:", datafromqr);
+        console.log("Decoded buffer length:", compressedBuffer.length);
         const decompressedData = buffer.toString('utf8');
         const jsonData = JSON.parse(decompressedData);
 

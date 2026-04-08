@@ -4,7 +4,7 @@ import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import QrReader from "react-qr-reader-es6";
 import { Captions } from "lucide-react";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 // -------------------------------------------
 // Manufacturer Dashboard
@@ -530,33 +530,65 @@ function CustomerVerifier() {
   }, []);
 
   const scanLock = useRef(false);
+  const lastScanned = useRef("");
+  const lastScanTime = useRef(0);
+
+  const SCAN_COOLDOWN = 4000; // allow same QR after 4 sec
+
   const handleScan = async (data) => {
-    if (!data || scanLock.current) return;
+
+    if (!data) return;
+
+    let scannedText = "";
+
+    // Extract QR text
+    if (typeof data === "string") scannedText = data;
+    else if (data?.text) scannedText = data.text;
+    else if (data?.data) scannedText = data.data;
+
+    scannedText = scannedText?.trim();
+
+    if (!scannedText) return;
+
+    const now = Date.now();
+
+    // Prevent camera multi-frame spam
+    if (scanLock.current) return;
+
+    // Prevent same QR within cooldown window
+    if (
+      scannedText === lastScanned.current &&
+      now - lastScanTime.current < SCAN_COOLDOWN
+    ) {
+      return;
+    }
 
     scanLock.current = true;
+    lastScanned.current = scannedText;
+    lastScanTime.current = now;
 
     try {
 
-      let scannedText;
+      setResult("🔎 Verifying product authenticity...");
 
-      if (typeof data === "string") scannedText = data;
-      else if (data?.text) scannedText = data.text;
-      else if (data?.data) scannedText = data.data;
-      else {
-        scanLock.current = false;
-        return;
-      }
-
-      setResult("Verifying product authenticity...");
+      console.log("QR RAW DATA:", scannedText);
 
       const res = await axios.post(`${API_BASE_URL}/verify_qr`, {
         qr_data: scannedText,
       });
 
-      if (res.data.isVerified) {
-        setResult("✅ " + res.data.message);
+      if (res.data?.isVerified) {
+
+        if (res.data?.duplicate) {
+          setResult("⚠️ " + res.data.message);
+        } else {
+          setResult("✅ " + res.data.message);
+        }
+
       } else {
-        setResult("❌ " + res.data.message);
+
+        setResult("❌ " + (res.data?.message || "Verification failed"));
+
       }
 
     } catch (err) {
@@ -565,18 +597,20 @@ function CustomerVerifier() {
 
       setResult(
         "❌ " +
-          (err.response?.data?.message ||
-            "Product verification failed")
+        (err.response?.data?.message || "Product verification failed")
       );
 
-    } finally {
 
-      setTimeout(() => {
-        scanLock.current = false;
-      }, 3000);
+  } finally {
 
-    }
-  };
+    // unlock scanner
+    setTimeout(() => {
+      scanLock.current = false;
+    }, 2000);
+
+  }
+
+};
 
   const handleError = (err) => {
     if (err?.name === "NotAllowedError") {
@@ -686,7 +720,7 @@ function CustomerVerifier() {
       {result && (
         <div
           className={`p-6 rounded-xl text-center text-lg font-extrabold border-2 transition-all duration-500 ${
-            result.includes("Verified:") || result.includes("Authentic")
+            result.includes("genuine") || result.includes("verified")
               ? "bg-green-900/40 text-green-300 border-green-500 glow-green-strong"
               : result.includes("Verifying")
               ? "bg-gray-800/60 text-gray-300 border-green-500/30 animate-pulse"
