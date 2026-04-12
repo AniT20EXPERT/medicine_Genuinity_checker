@@ -3,7 +3,9 @@ const express = require('express')
 const app = express()
 app.use(express.json());
 const cors = require('cors');
-app.use(cors());
+app.use(cors({
+  origin: "*", // for demo, later restrict
+}));
 const medicine_data = require('./models/medicine.model.js');
 const keys_and_id = require('./models/keys_and_id.model.js');
 const mongoose = require('mongoose');
