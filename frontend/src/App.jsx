@@ -580,9 +580,10 @@ function CustomerVerifier() {
       if (res.data?.isVerified) {
 
         if (res.data?.duplicate) {
-          setResult("⚠️ " + res.data.message);
+          setResult("⚠️ " + res.data.message + "\n" + " Expiry Date:" + res.data.product_data['expiry_date']);
         } else {
-          setResult("✅ " + res.data.message);
+          setResult("✅ " + res.data.message + "\n" + " Expiry Date:" + res.data.product_data['expiry_date']);
+          // console.log(res.data.product_data);
         }
 
       } else {
